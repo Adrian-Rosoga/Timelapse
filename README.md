@@ -2,7 +2,7 @@
 Utilities and workflow for producing timelapses with Raspberry Pi.
 
 Examples:
-* [London 28 January 2014] (https://www.youtube.com/watch?v=o3ewjVVeY2w)
+* [Snowstorm in London...] (https://www.youtube.com/watch?v=IVVAfh1jaSY)
 * [Night timelapse with the infrared camera] (https://www.youtube.com/watch?v=QOZFBpmTjF0)
 
 For a start, an utility that adds a timestamp to every image within a directory. For thousands of images the processing can easily take 15 minutes if timestamping is done serially. Taking advantage of multiple cores speeds up the processing.
