@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
 """
-Timestamp timelapse images.
-Usage: python ParallelTimestamping.py <directory> [<concurrency>]
+Timestamp in parallel all the .jpgs from a directory
 """
 
-import sys
+
+import os
 import multiprocessing as mp
 import subprocess
-from os import listdir
-from os.path import isfile, join
+import argparse
 
 
 def timestamp_file(file_queue):
@@ -17,19 +16,17 @@ def timestamp_file(file_queue):
 
     while True:
 
-        item = file_queue.get()
+        filename = file_queue.get()
 
-        #cmd = "convert \"" + item + "\" -font courier-bold -pointsize 36 -fill white -undercolor black -gravity SouthEast\
-        #       -quality 100 -annotate +20+20 \" %[exif:DateTimeOriginal] \" \"" + item + "\""
-        cmd = f'convert "{item}" -font courier-bold -pointsize 36 -fill white -undercolor black -gravity SouthEast\
-               -quality 100 -annotate +20+20 " %[exif:DateTimeOriginal] " "{item}"'
+        cmd = f'convert "{filename}" -font courier-bold -pointsize 36 -fill white -undercolor black -gravity SouthEast\
+               -quality 100 -annotate +20+20 " %[exif:DateTimeOriginal] " "{filename}"'
 
         if subprocess.call(cmd, shell=True):
-            print("Error processing file", item)
+            print("Error processing file", filename)
 
         file_queue.task_done()
 
-        
+
 def timestamp(directory, concurrency):
     """ Timestamp files from directory """
 
@@ -41,30 +38,28 @@ def timestamp(directory, concurrency):
         worker.start()
 
     count = 0
-    for filename in listdir(directory):
-        full_path = join(directory, filename)
-        if isfile(full_path) and filename.lower().endswith('.jpg'):
+    for filename in os.listdir(directory):
+        full_path = os.path.join(directory, filename)
+        if os.path.isfile(full_path) and filename.lower().endswith('.jpg'):
             file_queue.put(full_path)
             count += 1
 
-    print("\nWorker processes:", concurrency_level)
+    print("\nConcurrency (worker processes):", concurrency_level)
     print("Files to process:", count)
     print("Directory:", directory)
-            
+
     file_queue.join()
 
-    
+
 if __name__ == "__main__":
 
-    nb_args = len(sys.argv)
-    directory = ''
+    parser = argparse.ArgumentParser(description='Parallel Timestamping')
+    parser.add_argument('directory', help='directory containing the jpgs')
+    parser.add_argument('-c', '--concurrency', help='concurrency level')
+    args = parser.parse_args()
 
-    if nb_args == 2 or nb_args == 3:
-        directory = sys.argv[1]
-    else:
-        print("\nUsage:", sys.argv[0], "<directory> [<concurrency>]")
-        sys.exit(1)
+    directory = args.directory
 
-    concurrency_level = int(sys.argv[2]) if nb_args == 3 else 4 # Default (guess)
+    concurrency_level = int(args.concurrency) if args.concurrency else len(os.sched_getaffinity(0))
 
     timestamp(directory, concurrency_level)
