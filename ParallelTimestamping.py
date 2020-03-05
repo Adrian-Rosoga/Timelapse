@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 Timestamp timelapse images.
 Usage: python ParallelTimestamping.py <directory> [<concurrency>]
@@ -12,17 +14,19 @@ from os.path import isfile, join
 
 def timestamp_file(file_queue):
     """ Get file from queue and timestamp it """
-    
+
     while True:
-    
+
         item = file_queue.get()
 
-        cmd = "convert \"" + item + "\" -font courier-bold -pointsize 36 -fill white -undercolor black -gravity SouthEast\
-               -quality 100 -annotate +20+20 \" %[exif:DateTimeOriginal] \" \"" + item + "\""
-        
+        #cmd = "convert \"" + item + "\" -font courier-bold -pointsize 36 -fill white -undercolor black -gravity SouthEast\
+        #       -quality 100 -annotate +20+20 \" %[exif:DateTimeOriginal] \" \"" + item + "\""
+        cmd = f'convert "{item}" -font courier-bold -pointsize 36 -fill white -undercolor black -gravity SouthEast\
+               -quality 100 -annotate +20+20 " %[exif:DateTimeOriginal] " "{item}"'
+
         if subprocess.call(cmd, shell=True):
-            print "Error processing file", item
-            
+            print("Error processing file", item)
+
         file_queue.task_done()
 
         
@@ -31,21 +35,21 @@ def timestamp(directory, concurrency):
 
     file_queue = mp.JoinableQueue()
 
-    for n in range(concurrency):
+    for _ in range(concurrency):
         worker = mp.Process(target=timestamp_file, args=(file_queue,))
         worker.daemon = True
         worker.start()
 
     count = 0
-    for f in listdir(directory):
-        full_path = join(directory, f)
-        if isfile(full_path) and f.endswith('.jpg'):
+    for filename in listdir(directory):
+        full_path = join(directory, filename)
+        if isfile(full_path) and filename.lower().endswith('.jpg'):
             file_queue.put(full_path)
             count += 1
 
-    print "\nWorker processes:", concurrency_level
-    print "Files to process:", count
-    print "Directory:", directory
+    print("\nWorker processes:", concurrency_level)
+    print("Files to process:", count)
+    print("Directory:", directory)
             
     file_queue.join()
 
@@ -58,7 +62,7 @@ if __name__ == "__main__":
     if nb_args == 2 or nb_args == 3:
         directory = sys.argv[1]
     else:
-        print "\nUsage:", sys.argv[0], "<directory> [<concurrency>]"
+        print("\nUsage:", sys.argv[0], "<directory> [<concurrency>]")
         sys.exit(1)
 
     concurrency_level = int(sys.argv[2]) if nb_args == 3 else 4 # Default (guess)
