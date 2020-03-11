@@ -1,0 +1,13 @@
+#!/bin/bash
+
+MOVIE_NAME=$1
+
+#time tl_rotate_one_by_one
+
+time tl_timestamp
+
+# Day mode
+time (tl_encode_timelapse ${MOVIE_NAME} 2>/dev/null)
+
+# Night mode
+#time tl_encode_timelapse $MOVIE_NAME n 2>/dev/null

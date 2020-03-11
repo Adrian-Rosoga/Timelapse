@@ -1,0 +1,23 @@
+#!/bin/bash
+
+for dir in `ls -d 2017*`; do
+
+  date=${dir:0:8}
+
+  cd $dir  
+
+  timelapse=SGW_${date}
+
+  echo -e "Processing $dir - timelapse $timelapse...\n\n"
+
+  #
+  # Rotate righ: mogrify -rotate "90"
+  # Rotate left: mogrify -rotate "-90" 
+  #
+  #time mogrify -rotate "90" *.jpg && time tl_make_timelapse $timelapse
+  time tl_rotate_one_by_one && time tl_make_timelapse $timelapse
+
+  cd ..
+
+done
+

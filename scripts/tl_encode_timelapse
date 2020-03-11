@@ -1,0 +1,74 @@
+#!/bin/bash
+
+MOVIE_NAME=$1
+MODE=$2
+
+RATE_HQ=16000
+#RATE_HQ=32000
+RATE_LQ=6000
+
+# 2592/1944 = 1440/1080 = 960/720 = 1.3333
+
+#
+# Landscape
+#
+#SCALE_HQ=1440:1080
+#SCALE_HQX=1440x1080
+
+#SCALE_LQ=960:720
+#SCALE_LQX=960x720
+
+#
+# Portrait
+#
+#SCALE_HQ=1080:1440
+#SCALE_HQX=1080x1440
+
+#SCALE_LQ=720:960
+#SCALE_LQX=720x960
+
+
+#
+# Default is HQ
+#
+#RATE=${RATE_HQ}
+#SCALE=${SCALE_HQ}
+#SCALEX=${SCALE_HQX}
+
+IMAGE=`ls -1 *.jpg | head -n 1`
+
+RATE=${RATE_HQ}
+SCALE=`identify -format "%w:%h" ${IMAGE}`
+SCALEX=`identify -format "%wx%h" ${IMAGE}`
+
+FPS=30
+
+if [ x${MOVIE_NAME} = x"" ]
+then
+    echo "Usage: tl_encode_timelapse <file_name_without_extension> [n]"
+    echo "n - night mode, quality and frame rate reduced"
+    exit
+fi
+
+
+if [ x${MODE} = x"n" ]
+then
+    echo "Using night mode"
+    RATE=${RATE_LQ}
+    SCALE=${SCALE_LQ}
+    SCALEX=${SCALE_LQX}
+
+    MOVIE_NAME=${MOVIE_NAME}_ts
+else
+    MOVIE_NAME=${MOVIE_NAME}
+fi
+
+echo
+echo "--- Settings --------------------------------------------------"
+echo
+echo RATE=$RATE
+echo SCALE=$SCALE
+echo
+echo
+
+mencoder "mf://*.jpg" -nosound -vf scale=${SCALE} -mf fps=${FPS} -o ${MOVIE_NAME}.avi -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell=yes:v4mv=yes:vbitrate=${RATE}

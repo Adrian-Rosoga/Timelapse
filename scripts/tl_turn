@@ -1,0 +1,19 @@
+#!/bin/bash
+
+ANGLE=-3.50
+
+echo -e "Turning by $ANGLE...\n"
+
+
+for file in *.jpg ; do
+
+    echo -ne "\r$file"
+    
+    turn -a $ANGLE $file $file
+
+done
+
+echo -e "\n"
+
+exit
+

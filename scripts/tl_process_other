@@ -1,0 +1,43 @@
+#!/bin/bash
+
+TL=other
+
+export PATH=/home/adi/bin:$PATH
+
+#DAY=20180928
+DAY=$(date +%Y%m%d)
+
+PICS_DIR=/run/media/adi/EVO/timelapse/${TL}
+
+echo Processing for day ${DAY}...
+
+cd ${PICS_DIR}/${DAY}*
+
+# E.g. extract 20180303-102218 from ${PICS_DIR}/20180303-102218
+dirname=${PWD##*/}
+
+# Extract date - e.g. 20180303 from 20180303-102218
+date=${dirname%*-*}
+
+TIMELAPSE=SGW_${date}
+
+# Step 1
+#time tl_rotate_one_by_one
+
+# Step 2
+time tl_timestamp
+
+pwd
+#exit
+
+# Step 3
+time (tl_encode_timelapse ${TIMELAPSE} 2> /dev/null)
+
+/bin/mv ${TIMELAPSE}.avi ${PICS_DIR}/../${TL}_done
+
+cd ~
+
+#/bin/rm -rf ${PICS_DIR}/${DAY}*
+
+echo
+echo Done.

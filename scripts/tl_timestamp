@@ -1,0 +1,39 @@
+#!/bin/bash
+
+POINTSIZE=72
+#POINTSIZE=36
+
+#POS=+100+100
+POS=+20+50
+
+#FILL=white
+FILL=black
+
+#echo -e "\n"
+echo -e "Timestamping...\n"
+
+#
+# Testing
+#
+#file=$1
+#convert "$file" -font arial.ttf -pointsize 36 -fill black -annotate +20+50 %[exif:DateTimeOriginal] "${file}"
+#exit
+
+for file in *.jpg ; do
+    echo -ne "\r$file"
+    
+    # Good for 1440x1080 - no undercolor
+    #convert "$file" -font courier-bold -pointsize ${POINTSIZE} -fill ${FILL} -gravity SouthEast -annotate +20+20 %[exif:DateTimeOriginal] "${file}"
+
+    # Good for Canary Wharf timelapses - 1440x1050, no undercolor (so no padding) needed in the bottom-right corner
+    #convert $file -font courier-bold -pointsize 36 -fill white -gravity SouthEast -annotate +20+20 '%[exif:DateTimeOriginal]' $file
+
+    # Good for Dolben night or bright images becaue has undercolor
+    convert "$file" -font courier-bold -pointsize 36 -fill white -undercolor black -gravity SouthEast -annotate +20+20 " %[exif:DateTimeOriginal] " "$file"
+
+    #convert -background '#00000080' -fill white label:'Faerie Dragon' miff:- | composite -gravity SouthEast -geometry +0+3 - $file $file
+done
+
+echo -e "\n"
+
+exit

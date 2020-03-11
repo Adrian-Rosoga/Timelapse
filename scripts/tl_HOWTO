@@ -1,0 +1,12 @@
+
+Steps:
+
+Change rotation direction (left or right) in tl_rotate_one_by_one
+
+tl_rotate_one_by_one
+
+tl_make_timelapse <name>
+
+Obs:
+
+- tl_make_timelapse does: tl_timestamp followed by tl_encode_timelapse
