@@ -6,9 +6,14 @@ Timestamp in parallel all the .jpgs from a directory
 
 
 import os
+import sys
+import yaml
 import multiprocessing as mp
 import subprocess
 import argparse
+
+
+convert_params = ''
 
 
 def timestamp_file(file_queue):
@@ -18,8 +23,8 @@ def timestamp_file(file_queue):
 
         filename = file_queue.get()
 
-        cmd = f'convert "{filename}" -font courier-bold -pointsize 36 -fill white -undercolor black -gravity SouthEast\
-               -quality 100 -annotate +20+20 " %[exif:DateTimeOriginal] " "{filename}"'
+        cmd = f'convert "{filename}" {convert_params} "{filename}"'
+        #print(cmd)
 
         if subprocess.call(cmd, shell=True):
             print("Error processing file", filename)
@@ -44,14 +49,16 @@ def timestamp(directory, concurrency):
             file_queue.put(full_path)
             count += 1
 
-    print("\nConcurrency (worker processes):", concurrency_level)
-    print("Files to process:", count)
-    print("Directory:", directory)
+    print(f'\nConcurrency (worker processes): {concurrency}')
+    print(f'Files to process: {count}')
+    print(f'Directory: {directory}')
 
     file_queue.join()
 
 
-if __name__ == "__main__":
+def main():
+
+    global convert_params
 
     parser = argparse.ArgumentParser(description='Parallel Timestamping')
     parser.add_argument('directory', help='directory containing the jpgs')
@@ -60,6 +67,20 @@ if __name__ == "__main__":
 
     directory = args.directory
 
+    path_to_config_file = os.path.join('/'.join(sys.argv[0].split('/')[0:-1]), 'config.yaml')
+
+    with open(path_to_config_file) as config_file:
+        data = yaml.full_load(config_file)
+
+        for convert_param in data['convert_params']:
+            print(convert_param)
+
+    convert_params = ' '.join(data['convert_params'])
+
     concurrency_level = int(args.concurrency) if args.concurrency else len(os.sched_getaffinity(0))
 
     timestamp(directory, concurrency_level)
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,7 @@
+convert_params:
+  - '-font courier-bold'
+  - '-pointsize 72'
+  - '-fill white'
+  - '-gravity SouthEast'
+  - '-quality 100'
+  - '-annotate +20+50 " %[exif:DateTimeOriginal] "'
