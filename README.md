@@ -2,6 +2,7 @@
 Utilities and workflow for producing timelapses with Raspberry Pi.
 
 Examples:
+* [Timelapse of Thames at Vauxhall Bridge](https://www.youtube.com/watch?v=xoy-ybfUfvk)
 * [Snowstorm in London...](https://www.youtube.com/watch?v=IVVAfh1jaSY)
 * [Night timelapse with infrared camera](https://www.youtube.com/watch?v=QOZFBpmTjF0) (babies dance a lot...)
 
