@@ -9,19 +9,40 @@ import os
 import sys
 import yaml
 import multiprocessing as mp
+from multiprocessing import Value
 import subprocess
 import argparse
+import atexit
+import signal
+import time
 
 
 convert_params = ''
+main_pid = None
+
+flag = Value('i', 0)
 
 
-def timestamp_file(file_queue):
+def signal_handler(sig, frame):
+
+    global flag
+
+    print(f'{os.getpid()}: You pressed Ctrl+C!')
+    if os.getpid() == main_pid:
+        flag.value = 1
+        sys.exit(0)
+    else:
+        return
+
+
+def timestamp_file(file_queue, flag):
     """ Get file from queue and timestamp it """
 
-    while True:
+    while flag.value == 0:
 
         filename = file_queue.get()
+
+        print(filename)
 
         cmd = f'convert "{filename}" {convert_params} "{filename}"'
         #print(cmd)
@@ -31,16 +52,22 @@ def timestamp_file(file_queue):
 
         file_queue.task_done()
 
+    print(f'{os.getpid()} worker process done!')
+
 
 def timestamp(directory, concurrency):
     """ Timestamp files from directory """
 
+    global flag
+
     file_queue = mp.JoinableQueue()
 
     for _ in range(concurrency):
-        worker = mp.Process(target=timestamp_file, args=(file_queue,))
+        worker = mp.Process(target=timestamp_file, args=(file_queue, flag))
         worker.daemon = True
         worker.start()
+
+    signal.signal(signal.SIGINT, signal_handler)
 
     count = 0
     for filename in os.listdir(directory):
@@ -58,7 +85,8 @@ def timestamp(directory, concurrency):
 
 def main():
 
-    global convert_params
+    global convert_params, main_pid
+    main_pid = os.getpid()
 
     parser = argparse.ArgumentParser(description='Parallel Timestamping')
     parser.add_argument('directory', help='directory containing the jpgs')
