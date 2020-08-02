@@ -5,46 +5,44 @@ Timestamp in parallel all the .jpgs from a directory
 """
 
 
-import os
-import sys
-import yaml
-import multiprocessing as mp
-from multiprocessing import Value
-import subprocess
 import argparse
-import atexit
+import multiprocessing as mp
+import os
 import signal
-import time
+import subprocess
+import sys
+from multiprocessing import Value
+
+import yaml
+
+g_convert_params = ''
+g_pid_main_process = None
+g_finish_flag = Value('i', 0)
 
 
-convert_params = ''
-main_pid = None
+def signal_handler(sig, _):
 
-flag = Value('i', 0)
+    global g_finish_flag
 
-
-def signal_handler(sig, frame):
-
-    global flag
-
-    print(f'{os.getpid()}: You pressed Ctrl+C!')
-    if os.getpid() == main_pid:
-        flag.value = 1
-        sys.exit(0)
-    else:
-        return
+    if sig == signal.SIGINT:
+        print('Ctrl+C pressed! Shutting down...')
+        if os.getpid() == g_pid_main_process:
+            g_finish_flag.value = 1
+            sys.exit(0)
+        else:
+            return
 
 
-def timestamp_file(file_queue, flag):
+def timestamp_file(file_queue):
     """ Get file from queue and timestamp it """
 
-    while flag.value == 0:
+    while g_finish_flag.value == 0:
 
         filename = file_queue.get()
 
         print(filename)
 
-        cmd = f'convert "{filename}" {convert_params} "{filename}"'
+        cmd = f'convert "{filename}" {g_convert_params} "{filename}"'
         #print(cmd)
 
         if subprocess.call(cmd, shell=True):
@@ -58,13 +56,13 @@ def timestamp_file(file_queue, flag):
 def timestamp(directory, concurrency):
     """ Timestamp files from directory """
 
-    global flag
-
     file_queue = mp.JoinableQueue()
 
+    workers = []
     for _ in range(concurrency):
-        worker = mp.Process(target=timestamp_file, args=(file_queue, flag))
+        worker = mp.Process(target=timestamp_file, args=(file_queue,))
         worker.daemon = True
+        workers.append(worker)
         worker.start()
 
     signal.signal(signal.SIGINT, signal_handler)
@@ -85,8 +83,8 @@ def timestamp(directory, concurrency):
 
 def main():
 
-    global convert_params, main_pid
-    main_pid = os.getpid()
+    global g_convert_params, g_pid_main_process
+    g_pid_main_process = os.getpid()
 
     parser = argparse.ArgumentParser(description='Parallel Timestamping')
     parser.add_argument('directory', help='directory containing the jpgs')
@@ -100,10 +98,11 @@ def main():
     with open(path_to_config_file) as config_file:
         data = yaml.full_load(config_file)
 
+        print('"convert" parameters:')
         for convert_param in data['convert_params']:
             print(convert_param)
 
-    convert_params = ' '.join(data['convert_params'])
+    g_convert_params = ' '.join(data['convert_params'])
 
     concurrency_level = int(args.concurrency) if args.concurrency else len(os.sched_getaffinity(0))
 
